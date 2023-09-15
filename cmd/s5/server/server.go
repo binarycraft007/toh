@@ -152,9 +152,10 @@ func (s *S5Server) loadServer() (err error) {
 	srv := s.opts.Cfg.Server
 	var c *client.TohClient
 	opts := client.Options{
-		Server:  srv.Addr,
-		Key:     srv.Key,
-		Headers: srv.Headers,
+		Server:     srv.Addr,
+		Key:        srv.Key,
+		Headers:    srv.Headers,
+		ServerName: srv.ServerName,
 	}
 	if len(srv.Keepalive) > 0 {
 		opts.Keepalive, err = time.ParseDuration(srv.Keepalive)

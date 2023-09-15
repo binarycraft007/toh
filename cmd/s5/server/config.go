@@ -39,6 +39,8 @@ type TohServer struct {
 	Addr string `json:"addr"`
 	// toh server authcate key
 	Key string `json:"key"`
+	// server name indication
+	ServerName string `json:"server_name,omitempty"`
 	// url that responds to any http status code. dual stack IP should be supported
 	Healthcheck []string `json:"healthcheck,omitempty"`
 	// the interval send ping to the under websocket conn for keepalive

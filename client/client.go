@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -11,15 +12,16 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
-	"github.com/gobwas/ws"
-	"github.com/gobwas/ws/wsutil"
-	"github.com/miekg/dns"
 	D "github.com/binarycraft007/toh/dns"
 	"github.com/binarycraft007/toh/server/api"
 	"github.com/binarycraft007/toh/spec"
+	"github.com/gobwas/ws"
+	"github.com/gobwas/ws/wsutil"
+	"github.com/miekg/dns"
 	"github.com/sirupsen/logrus"
 )
 
@@ -36,9 +38,11 @@ type TohClient struct {
 }
 
 type Options struct {
-	Server, Key string
-	Keepalive   time.Duration
-	Headers     http.Header
+	ServerName string
+	Server     string
+	Key        string
+	Keepalive  time.Duration
+	Headers    http.Header
 }
 
 func NewTohClient(options Options) (*TohClient, error) {
@@ -277,6 +281,25 @@ func (c *TohClient) dialWS(ctx context.Context, urlstr string, header http.Heade
 	wsc *wsConn, respHeader http.Header, err error) {
 	respHeader = http.Header{}
 	var statusCode int
+	var serverName string
+	u, err := url.Parse(urlstr)
+	if err != nil {
+		return
+	}
+	if len(c.options.ServerName) > 0 {
+		serverName = c.options.ServerName
+	} else {
+		var host string
+		host, _, err = net.SplitHostPort(u.Host)
+		if err != nil {
+			if !strings.Contains(err.Error(), "missing port in address") {
+				return
+			} else {
+				host = u.Host
+			}
+		}
+		serverName = host
+	}
 	dialer := ws.Dialer{
 		NetDial: c.netDial,
 		Header:  ws.HandshakeHeaderHTTP(header),
@@ -287,10 +310,9 @@ func (c *TohClient) dialWS(ctx context.Context, urlstr string, header http.Heade
 		OnStatusError: func(status int, reason []byte, resp io.Reader) {
 			statusCode = status
 		},
-	}
-	u, err := url.Parse(urlstr)
-	if err != nil {
-		return
+		TLSConfig: &tls.Config{
+			ServerName: serverName,
+		},
 	}
 	switch u.Scheme {
 	case "http":
