@@ -62,43 +62,30 @@ func NewTohClient(options Options) (*TohClient, error) {
 			if err != nil {
 				return
 			}
-			ipv4Done := make(chan bool)
-			ipv6Done := make(chan bool)
-			ipv4Ok := make(chan bool)
-			ipv6Ok := make(chan bool)
-			defer close(ipv4Ok)
-			go func() {
-				<-ipv6Done
-				<-ipv4Done
-				close(ipv6Ok)
-			}()
+			done := make(chan bool, 2)
 
 			go func() {
-				defer close(ipv6Done)
+				defer func() { done <- true }()
 				c.serverIPv6s, err = D.LookupIP6(host)
 				if err != nil {
 					logrus.Debugf("lookup6 for %s: %s", host, err)
 					return
 				}
-				if len(c.serverIPv6s) > 0 {
-					ipv6Ok <- true
-				}
 			}()
 
 			go func() {
-				defer close(ipv4Done)
+				defer func() { done <- true }()
 				c.serverIPv4s, err = D.LookupIP4(host)
 				if err != nil {
 					logrus.Debugf("lookup4 for %s: %s", host, err)
 					return
 				}
-				if len(c.serverIPv4s) > 0 {
-					ipv4Ok <- true
-				}
 			}()
-			select {
-			case <-ipv4Ok:
-			case <-ipv6Ok:
+
+			for i := 0; i < 2; i++ {
+				select {
+				case <-done:
+				}
 			}
 		}
 		if len(c.serverIPv6s) > 0 {
