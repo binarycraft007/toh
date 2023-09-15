@@ -6,7 +6,6 @@
 - [Caddy or Nginx wrap ToH server with TLS](#caddy-or-nginx-wrap-toh-server-with-tls)
 - [Port-forward tool `pf` act as ToH client](#port-forward-tool-pf-act-as-toh-client)
 - [Socks5+http proxy server `s5` act as ToH client](#socks5http-proxy-server-s5-act-as-toh-client)
-- [Android project `tohdroid` act as ToH client](#android-project-tohdroid-act-as-toh-client)
 
 ### ToH server
 - Build
@@ -86,19 +85,8 @@ The document has moved
 ### Socks5+http proxy server `s5` act as ToH client
 ```sh
 $ ./toh s5
-time="2023-05-12T15:02:11Z" level=info msg="initializing config file /root/.config/toh/socks5.yml"
-listen: 127.0.0.1:2080
-servers:
-  - name: us1
-    api: https://fill-in-your-server-here.toh.sh/ws
-    key: 112qcPA4xPxh7PQV3fyTMEkfByEEn84EjNeMmskVTBVy2aCa4ipX
-    ruleset:
-      - https://raw.githubusercontent.com/rkonfj/toh/main/ruleset.txt
-time="2023-05-12T15:02:11Z" level=info msg="downloading https://raw.githubusercontent.com/rkonfj/toh/main/ruleset.txt"
-time="2023-05-12T15:02:14Z" level=info msg="ruleset   us1: special 0, direct 0, wildcard 21"
-time="2023-05-12T15:02:14Z" level=info msg="total loaded 1 proxy servers and 0 groups"
-time="2023-05-12T15:02:14Z" level=info msg="downloading /root/.config/toh/country.mmdb (this can take up to 5m0s)"
-time="2023-05-12T15:05:17Z" level=info msg="listen on 127.0.0.1:2080 for socks5+http now"
+time="2023-09-15T23:44:16+08:00" level=info msg="listen on 127.0.0.1:2080 for socks5+http now"
+time="2023-09-15T23:44:21+08:00" level=info stats_in="127.0.0.1:57362" stats_in_bytes=968 stats_net=tcp stats_out="[2404:6800:4004:825::200a]:443" stats_out_bytes=212 stats_toh=toh
 
 $ # run in another shell
 $ https_proxy=socks5://127.0.0.1:2080 curl https://api64.ipify.org

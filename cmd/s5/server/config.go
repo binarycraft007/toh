@@ -16,16 +16,12 @@ var (
 )
 
 type Config struct {
-	// maxmind geoip2 db path
-	Geoip2 string `json:"geoip2,omitempty"`
 	// socks5+http proxy server listen addr
 	Listen string `json:"listen"`
 	// advertised server addr
 	Advertise *Advertise `json:"advertise,omitempty"`
 	// toh server list
-	Servers []*TohServer `json:"servers"`
-	// group toh servers
-	Groups []*ServerGroup `json:"groups,omitempty"`
+	Server *TohServer `json:"servers"`
 	// local network settings
 	LocalNet *LocalNet `json:"localnet,omitempty"`
 }
@@ -39,14 +35,10 @@ type Advertise struct {
 }
 
 type TohServer struct {
-	// name to identify the toh server
-	Name string `json:"name"`
 	// toh server adderss. i.e. https://fill-in-your-server-here.toh.sh/ws
 	Addr string `json:"addr"`
 	// toh server authcate key
 	Key string `json:"key"`
-	// this server is used when the remote accessed by the user hits this ruleset
-	Ruleset []string `json:"ruleset,omitempty"`
 	// url that responds to any http status code. dual stack IP should be supported
 	Healthcheck []string `json:"healthcheck,omitempty"`
 	// the interval send ping to the under websocket conn for keepalive
@@ -55,31 +47,14 @@ type TohServer struct {
 	Headers http.Header `json:"headers,omitempty"`
 }
 
-type ServerGroup struct {
-	// name to identify the server group
-	Name string `json:"name"`
-	// toh server name list from `servers` section
-	Servers []string `json:"servers"`
-	// same as `servers` section
-	Ruleset []string `json:"ruleset"`
-	// loadbalancer rule. Round Robin (rr) or Best Latency (bl), default is bl
-	Loadbalancer string `json:"loadbalancer"`
-}
-
 type LocalNet struct {
 	// url that responds to any http status code. dual stack IP should be supported
 	AddrFamilyDetectURL []string `json:"afdetect,omitempty"`
 }
 
 func (c *Config) applyDefaults() {
-	if len(c.Geoip2) == 0 {
-		c.Geoip2 = "country.mmdb"
-	}
-
-	for _, server := range c.Servers {
-		if len(server.Healthcheck) == 0 {
-			server.Healthcheck = DefaultServerHealthcheck
-		}
+	if len(c.Server.Healthcheck) == 0 {
+		c.Server.Healthcheck = DefaultServerHealthcheck
 	}
 
 	if c.LocalNet == nil {

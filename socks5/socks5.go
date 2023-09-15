@@ -15,9 +15,9 @@ type Options struct {
 	AdvertiseIP    string
 	AdvertisePort  uint16
 	TCPDialContext func(ctx context.Context, addr string) (
-		dialerName string, conn net.Conn, err error)
+		conn net.Conn, err error)
 	UDPDialContext func(ctx context.Context, addr string) (
-		dialerName string, conn net.Conn, err error)
+		conn net.Conn, err error)
 	TrafficEventConsumer func(e *spec.TrafficEvent)
 	HTTPHandlers         map[string]Handler
 }
@@ -78,16 +78,16 @@ func (s *Socks5Server) Run() error {
 		go func() {
 			ctx := context.WithValue(context.Background(),
 				spec.AppAddr, conn.RemoteAddr().String())
-			dialerName, netConn := s.handshake(ctx, conn)
+			netConn := s.handshake(ctx, conn)
 			if netConn != nil {
-				s.pipeEngine.Pipe(dialerName, conn, netConn)
+				s.pipeEngine.Pipe(conn, netConn)
 			}
 		}()
 	}
 }
 
 func (s *Socks5Server) handshake(ctx context.Context, conn net.Conn) (
-	dialerName string, netConn net.Conn) {
+	netConn net.Conn) {
 	log := logrus.WithField(spec.AppAddr.String(), ctx.Value(spec.AppAddr))
 	buf := make([]byte, 1024)
 	closeConn := true
@@ -184,10 +184,10 @@ func (s *Socks5Server) handshake(ctx context.Context, conn net.Conn) (
 	switch cmd {
 	// 1. CONNECT
 	case 1:
-		dialerName, netConn, err = s.opts.TCPDialContext(ctx, remoteAddr)
+		netConn, err = s.opts.TCPDialContext(ctx, remoteAddr)
 		if err != nil {
-			log.Errorf("socks5 establishing tcp://%s (via %s) error: %s",
-				remoteAddr, dialerName, err)
+			log.Errorf("socks5 establishing tcp://%s error: %s",
+				remoteAddr, err)
 			// Host Unreachable https://datatracker.ietf.org/doc/html/rfc1928#section-6
 			conn.Write([]byte{0x05, 0x04, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00})
 			return

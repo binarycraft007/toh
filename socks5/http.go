@@ -86,7 +86,7 @@ func (s *HTTPProxyServer) handle(b []byte, originConn net.Conn) {
 		}
 
 		ctx := context.WithValue(context.Background(), spec.AppAddr, conn.RemoteAddr().String())
-		dialerName, httpConn, err := s.opts.TCPDialContext(ctx, addr)
+		httpConn, err := s.opts.TCPDialContext(ctx, addr)
 		if err != nil {
 			logrus.Error(err)
 			continue
@@ -99,7 +99,7 @@ func (s *HTTPProxyServer) handle(b []byte, originConn net.Conn) {
 				logrus.Error(err)
 				continue
 			}
-			go s.pipeEngine.Pipe(dialerName, conn, httpConn)
+			go s.pipeEngine.Pipe(conn, httpConn)
 			closeConn = false
 			break
 		}
@@ -113,8 +113,10 @@ func (s *HTTPProxyServer) handle(b []byte, originConn net.Conn) {
 			continue
 		}
 
-		go s.pipeEngine.Pipe(dialerName,
-			&protocolDetectionConnWrapper{Conn: conn, b: buf.Bytes()}, httpConn)
+		go s.pipeEngine.Pipe(
+			&protocolDetectionConnWrapper{Conn: conn, b: buf.Bytes()},
+			httpConn,
+		)
 		closeConn = false
 		break
 	}

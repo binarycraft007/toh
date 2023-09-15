@@ -33,7 +33,7 @@ func (s *Socks5Server) pipeSocks5UDP(buf []byte, bc int, udpConn net.PacketConn,
 	}
 	addr := net.JoinHostPort(ip.String(), fmt.Sprintf("%d", port))
 	ctx := context.WithValue(context.Background(), spec.AppAddr, clientAddr.String())
-	dialerName, conn, err := s.opts.UDPDialContext(ctx, addr)
+	conn, err := s.opts.UDPDialContext(ctx, addr)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -64,7 +64,6 @@ func (s *Socks5Server) pipeSocks5UDP(buf []byte, bc int, udpConn net.PacketConn,
 	}
 
 	s.pipeEngine.PubEvent(&spec.TrafficEvent{
-		DialerName: dialerName,
 		Network:    "udp",
 		LocalAddr:  clientAddr.String(),
 		RemoteAddr: addr,
