@@ -13,8 +13,8 @@ import (
 
 	"github.com/decred/base58"
 	"github.com/dustin/go-humanize"
-	"github.com/rkonfj/toh/server/api"
-	"github.com/rkonfj/toh/spec"
+	"github.com/binarycraft007/toh/server/api"
+	"github.com/binarycraft007/toh/spec"
 	"github.com/sirupsen/logrus"
 )
 

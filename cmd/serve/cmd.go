@@ -2,7 +2,7 @@ package serve
 
 import (
 	"github.com/dustin/go-humanize"
-	"github.com/rkonfj/toh/server"
+	"github.com/binarycraft007/toh/server"
 	"github.com/spf13/cobra"
 )
 

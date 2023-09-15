@@ -11,7 +11,7 @@
 ### ToH server
 - Build
 ```sh
-$ git clone https://github.com/rkonfj/toh.git
+$ git clone https://github.com/binarycraft007/toh.git
 $ make linux
 ```
 
@@ -105,9 +105,6 @@ $ https_proxy=socks5://127.0.0.1:2080 curl https://api64.ipify.org
 104.207.152.45
 $ # wow, great! the `104.207.152.45` is your proxy ip
 ```
-- full configuration can be viewed [here](https://github.com/rkonfj/toh/blob/main/cmd/s5/server/config.go)  
+- full configuration can be viewed [here](https://github.com/binarycraft007/toh/blob/main/cmd/s5/server/config.go)  
 - socks5 support `CONNECT` and `UDP ASSOCIATE`
 - the server `us1` is the test server, will stopped in the future
-
-### Android project `tohdroid` act as ToH client
-see project [tohdroid](https://github.com/rkonfj/tohdroid) for details

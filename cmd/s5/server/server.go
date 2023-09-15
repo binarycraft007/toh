@@ -18,12 +18,12 @@ import (
 
 	"github.com/miekg/dns"
 	"github.com/oschwald/geoip2-golang"
-	"github.com/rkonfj/toh/client"
-	D "github.com/rkonfj/toh/dns"
-	"github.com/rkonfj/toh/ruleset"
-	"github.com/rkonfj/toh/server/api"
-	"github.com/rkonfj/toh/socks5"
-	"github.com/rkonfj/toh/spec"
+	"github.com/binarycraft007/toh/client"
+	D "github.com/binarycraft007/toh/dns"
+	"github.com/binarycraft007/toh/ruleset"
+	"github.com/binarycraft007/toh/server/api"
+	"github.com/binarycraft007/toh/socks5"
+	"github.com/binarycraft007/toh/spec"
 	"github.com/sirupsen/logrus"
 )
 

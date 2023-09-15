@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/rkonfj/toh/server/api"
+	"github.com/binarycraft007/toh/server/api"
 	"github.com/spf13/cobra"
 )
 

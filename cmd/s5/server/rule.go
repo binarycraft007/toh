@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"net"
 
-	"github.com/rkonfj/toh/ruleset"
+	"github.com/binarycraft007/toh/ruleset"
 	"github.com/sirupsen/logrus"
 )
 

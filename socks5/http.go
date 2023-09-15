@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/rkonfj/toh/spec"
+	"github.com/binarycraft007/toh/spec"
 	"github.com/sirupsen/logrus"
 )
 
@@ -125,7 +125,7 @@ func (s *HTTPProxyServer) responsePacScript(w io.Writer, referAddr string) {
 	if !net.ParseIP(s.opts.AdvertiseIP).IsLoopback() {
 		pacScriptServer = fmt.Sprintf("%s:%d", s.opts.AdvertiseIP, s.opts.AdvertisePort)
 	}
-	content := fmt.Sprintf("// give me a star please: https://github.com/rkonfj/toh\n\n"+
+	content := fmt.Sprintf("// give me a star please: https://github.com/binarycraft007/toh\n\n"+
 		"function FindProxyForURL(url, host) {\n"+
 		"    if (isPlainHostName(host)) return 'DIRECT'\n"+
 		"    if (isInNet(host, '10.0.0.0', '255.0.0.0') ||\n"+

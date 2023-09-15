@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/rkonfj/toh/server/acl"
-	"github.com/rkonfj/toh/server/api"
-	"github.com/rkonfj/toh/spec"
+	"github.com/binarycraft007/toh/server/acl"
+	"github.com/binarycraft007/toh/server/api"
+	"github.com/binarycraft007/toh/spec"
 	"github.com/sirupsen/logrus"
 )
 

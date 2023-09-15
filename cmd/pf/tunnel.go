@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
-	"github.com/rkonfj/toh/client"
+	"github.com/binarycraft007/toh/client"
 	"github.com/sirupsen/logrus"
 )
 

@@ -17,58 +17,58 @@ var (
 
 type Config struct {
 	// maxmind geoip2 db path
-	Geoip2 string `yaml:"geoip2,omitempty"`
+	Geoip2 string `json:"geoip2,omitempty"`
 	// socks5+http proxy server listen addr
-	Listen string `yaml:"listen"`
+	Listen string `json:"listen"`
 	// advertised server addr
-	Advertise *Advertise `yaml:"advertise,omitempty"`
+	Advertise *Advertise `json:"advertise,omitempty"`
 	// toh server list
-	Servers []*TohServer `yaml:"servers"`
+	Servers []*TohServer `json:"servers"`
 	// group toh servers
-	Groups []*ServerGroup `yaml:"groups,omitempty"`
+	Groups []*ServerGroup `json:"groups,omitempty"`
 	// local network settings
-	LocalNet *LocalNet `yaml:"localnet,omitempty"`
+	LocalNet *LocalNet `json:"localnet,omitempty"`
 }
 
 // Advertise since the socks5 server can listen to multiple network cards or be reverse-proxyed
 // we need to set an advertising ip and port
 // for example, socks5 UDP ASSOCIATE refers to this address when responding to the client
 type Advertise struct {
-	IP   string `yaml:"ip,omitempty"`
-	Port uint16 `yaml:"port,omitempty"`
+	IP   string `json:"ip,omitempty"`
+	Port uint16 `json:"port,omitempty"`
 }
 
 type TohServer struct {
 	// name to identify the toh server
-	Name string `yaml:"name"`
+	Name string `json:"name"`
 	// toh server adderss. i.e. https://fill-in-your-server-here.toh.sh/ws
-	Addr string `yaml:"addr"`
+	Addr string `json:"addr"`
 	// toh server authcate key
-	Key string `yaml:"key"`
+	Key string `json:"key"`
 	// this server is used when the remote accessed by the user hits this ruleset
-	Ruleset []string `yaml:"ruleset,omitempty"`
+	Ruleset []string `json:"ruleset,omitempty"`
 	// url that responds to any http status code. dual stack IP should be supported
-	Healthcheck []string `yaml:"healthcheck,omitempty"`
+	Healthcheck []string `json:"healthcheck,omitempty"`
 	// the interval send ping to the under websocket conn for keepalive
-	Keepalive string `yaml:"keepalive,omitempty"`
+	Keepalive string `json:"keepalive,omitempty"`
 	// customize the request header sent to the toh server
-	Headers http.Header `yaml:"headers,omitempty"`
+	Headers http.Header `json:"headers,omitempty"`
 }
 
 type ServerGroup struct {
 	// name to identify the server group
-	Name string `yaml:"name"`
+	Name string `json:"name"`
 	// toh server name list from `servers` section
-	Servers []string `yaml:"servers"`
+	Servers []string `json:"servers"`
 	// same as `servers` section
-	Ruleset []string `yaml:"ruleset"`
+	Ruleset []string `json:"ruleset"`
 	// loadbalancer rule. Round Robin (rr) or Best Latency (bl), default is bl
-	Loadbalancer string `yaml:"loadbalancer"`
+	Loadbalancer string `json:"loadbalancer"`
 }
 
 type LocalNet struct {
 	// url that responds to any http status code. dual stack IP should be supported
-	AddrFamilyDetectURL []string `yaml:"afdetect,omitempty"`
+	AddrFamilyDetectURL []string `json:"afdetect,omitempty"`
 }
 
 func (c *Config) applyDefaults() {

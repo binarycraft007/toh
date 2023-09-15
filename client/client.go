@@ -17,9 +17,9 @@ import (
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
 	"github.com/miekg/dns"
-	D "github.com/rkonfj/toh/dns"
-	"github.com/rkonfj/toh/server/api"
-	"github.com/rkonfj/toh/spec"
+	D "github.com/binarycraft007/toh/dns"
+	"github.com/binarycraft007/toh/server/api"
+	"github.com/binarycraft007/toh/spec"
 	"github.com/sirupsen/logrus"
 )
 

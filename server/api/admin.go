@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/rkonfj/toh/spec"
+	"github.com/binarycraft007/toh/spec"
 )
 
 type ServerAdminClient struct {

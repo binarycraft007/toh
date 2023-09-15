@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/miekg/dns"
-	"github.com/rkonfj/toh/spec"
+	"github.com/binarycraft007/toh/spec"
 )
 
 var dnsClient *dns.Client = &dns.Client{}

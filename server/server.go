@@ -13,9 +13,9 @@ import (
 
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
-	"github.com/rkonfj/toh/server/acl"
-	"github.com/rkonfj/toh/server/admin"
-	"github.com/rkonfj/toh/spec"
+	"github.com/binarycraft007/toh/server/acl"
+	"github.com/binarycraft007/toh/server/admin"
+	"github.com/binarycraft007/toh/spec"
 	"github.com/sirupsen/logrus"
 )
 

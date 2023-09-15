@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rkonfj/toh/spec"
+	"github.com/binarycraft007/toh/spec"
 	"github.com/sirupsen/logrus"
 )
 

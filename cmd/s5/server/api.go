@@ -6,7 +6,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/rkonfj/toh/server/api"
+	"github.com/binarycraft007/toh/server/api"
 )
 
 type ServerInfo struct {
