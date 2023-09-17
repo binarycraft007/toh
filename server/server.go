@@ -11,11 +11,11 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/gobwas/ws"
-	"github.com/gobwas/ws/wsutil"
 	"github.com/binarycraft007/toh/server/acl"
 	"github.com/binarycraft007/toh/server/admin"
 	"github.com/binarycraft007/toh/spec"
+	"github.com/gobwas/ws"
+	"github.com/gobwas/ws/wsutil"
 	"github.com/sirupsen/logrus"
 )
 
@@ -54,9 +54,8 @@ func NewTohServer(options Options) (*TohServer, error) {
 func (s *TohServer) Run() {
 	go s.runTrafficEventConsumeLoop()
 	go s.runShutdownListener()
-	s.adminAPI.Register()
+	// s.adminAPI.Register()
 
-	http.HandleFunc("/stats", s.HandleShowStats)
 	http.HandleFunc("/", s.HandleUpgradeWebSocket)
 
 	logrus.Infof("server listen on %s now", s.options.Listen)

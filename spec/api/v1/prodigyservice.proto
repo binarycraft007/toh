@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+option go_package = "toh/prodigyservice";
+package prodigyservice;
+
+service ProdigyService {
+  rpc StreamMessages (stream Message) returns (stream Message) {}
+}
+
+message Message {
+  bytes Data = 1;
+}
