@@ -80,6 +80,7 @@ func (s *Socks5Server) Run() error {
 			ctx := context.WithValue(context.Background(),
 				spec.AppAddr, conn.RemoteAddr().String())
 			netConn := s.handshake(ctx, conn)
+			defer conn.Close()
 			if netConn != nil {
 				errc := make(chan error, 2)
 				go func() {
@@ -98,6 +99,16 @@ func (s *Socks5Server) Run() error {
 				}()
 
 				return <-errc
+			} else {
+				for {
+					buf := make([]byte, 32*1024)
+					if _, err = conn.Read(buf); err != nil {
+						if err == io.EOF || err == net.ErrClosed {
+							break
+						}
+						return err
+					}
+				}
 			}
 			return nil
 		}()

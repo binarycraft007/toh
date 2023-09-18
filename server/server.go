@@ -117,6 +117,7 @@ func (prodigyService) StreamMessages(stream pb.ProdigyService_StreamMessagesServ
 		logrus.Infof("%s(%s) -> %s://%s: %s", clientIP, key, network, addr, err)
 		return err
 	}
+	defer netConn.Close()
 
 	var FieldFunc = func(msg proto.Message) *[]byte {
 		return &msg.(*pb.Message).Data
@@ -129,6 +130,7 @@ func (prodigyService) StreamMessages(stream pb.ProdigyService_StreamMessagesServ
 		Encode:   grpc_net_conn.SimpleEncoder(FieldFunc),
 		Decode:   grpc_net_conn.SimpleDecoder(FieldFunc),
 	}
+	defer conn.Close()
 
 	if err = stream.Send(&pb.Message{Data: []byte(netConn.RemoteAddr().String())}); err != nil {
 		return err
