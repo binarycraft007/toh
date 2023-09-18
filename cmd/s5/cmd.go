@@ -130,8 +130,10 @@ func defaultOptions() *server.Config {
 	return &server.Config{
 		Listen: "127.0.0.1:2080",
 		Server: &server.TohServer{
-			Addr: "https://fill-in-your-server-here.toh.sh/ws",
-			Key:  "112qcPA4xPxh7PQV3fyTMEkfByEEn84EjNeMmskVTBVy2aCa4ipX",
+			ServerName: "fill-in-your-server-here.toh.sh",
+			RemoteAddr: "fill-in-your-server-here.toh.sh",
+			RemotePort: 443,
+			Password:   "112qcPA4xPxh7PQV3fyTMEkfByEEn84EjNeMmskVTBVy2aCa4ipX",
 		},
 	}
 }

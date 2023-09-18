@@ -64,11 +64,11 @@ func (s *Socks5Server) pipeSocks5UDP(buf []byte, bc int, udpConn net.PacketConn,
 	}
 
 	s.pipeEngine.PubEvent(&spec.TrafficEvent{
-		Network:    "udp",
-		LocalAddr:  clientAddr.String(),
-		RemoteAddr: addr,
-		In:         int64(len(payload)),
-		Out:        int64(n),
+		Network:   "udp",
+		LocalAddr: clientAddr.String(),
+		//RemoteAddr: addr,
+		In:  int64(len(payload)),
+		Out: int64(n),
 	})
 }
 

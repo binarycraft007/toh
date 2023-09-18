@@ -152,8 +152,9 @@ func (s *S5Server) loadServer() (err error) {
 	srv := s.opts.Cfg.Server
 	var c *client.TohClient
 	opts := client.Options{
-		Server:     srv.Addr,
-		Key:        srv.Key,
+		RemoteAddr: srv.RemoteAddr,
+		RemotePort: srv.RemotePort,
+		Password:   srv.Password,
 		Headers:    srv.Headers,
 		ServerName: srv.ServerName,
 	}
@@ -167,7 +168,6 @@ func (s *S5Server) loadServer() (err error) {
 	if err != nil {
 		return
 	}
-
 	s.server = &Server{
 		client:      c,
 		latency:     5 * time.Minute,
@@ -193,7 +193,7 @@ func (s *S5Server) loadServer() (err error) {
 			},
 		},
 	}
-	go s.server.healthcheck(srv.Healthcheck)
+	//go s.server.healthcheck(srv.Healthcheck)
 	return
 }
 

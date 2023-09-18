@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/binarycraft007/toh/cmd/acl"
-	"github.com/binarycraft007/toh/cmd/pf"
 	"github.com/binarycraft007/toh/cmd/s5"
 	"github.com/binarycraft007/toh/cmd/serve"
 	"github.com/binarycraft007/toh/spec"
@@ -21,7 +20,6 @@ func main() {
 		PersistentPreRunE: initAction,
 	}
 
-	cmd.AddCommand(pf.Cmd)
 	cmd.AddCommand(serve.Cmd)
 	cmd.AddCommand(s5.Cmd)
 	cmd.AddCommand(acl.Cmd)

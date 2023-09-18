@@ -7,8 +7,9 @@ import (
 )
 
 type TrafficEvent struct {
-	Network, RemoteAddr, LocalAddr string
-	In, Out                        int64
+	//Network, RemoteAddr, LocalAddr string
+	Network, LocalAddr string
+	In, Out            int64
 }
 
 type TrafficEventConsumer func(e *TrafficEvent)
@@ -56,10 +57,10 @@ func (s *PipeEngine) Pipe(conn, rConn net.Conn) {
 	rConn.Close()
 	wg.Wait()
 	s.eventChan <- &TrafficEvent{
-		Network:    "tcp",
-		LocalAddr:  conn.RemoteAddr().String(),
-		RemoteAddr: rConn.RemoteAddr().String(),
-		In:         lbc,
-		Out:        rbc,
+		Network:   "tcp",
+		LocalAddr: conn.RemoteAddr().String(),
+		//RemoteAddr: rConn.RemoteAddr().String(),
+		In:  lbc,
+		Out: rbc,
 	}
 }

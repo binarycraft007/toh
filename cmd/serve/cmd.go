@@ -1,8 +1,8 @@
 package serve
 
 import (
-	"github.com/dustin/go-humanize"
 	"github.com/binarycraft007/toh/server"
+	"github.com/dustin/go-humanize"
 	"github.com/spf13/cobra"
 )
 
@@ -18,7 +18,6 @@ func init() {
 	Cmd.Flags().String("acl", "acl.json", "file containing access control rules")
 	Cmd.Flags().String("admin-key", "", "key to access the admin api (leave blank to disable admin api)")
 	Cmd.Flags().String("copy-buf", "32ki", "buffer size for copying network data")
-	Cmd.Flags().StringP("listen", "l", "127.0.0.1:9986", "http server listen address")
 }
 
 func startAction(cmd *cobra.Command, args []string) error {
@@ -35,10 +34,6 @@ func startAction(cmd *cobra.Command, args []string) error {
 }
 
 func processServerOptions(cmd *cobra.Command) (options server.Options, err error) {
-	options.Listen, err = cmd.Flags().GetString("listen")
-	if err != nil {
-		return
-	}
 	options.ACL, err = cmd.Flags().GetString("acl")
 	if err != nil {
 		return

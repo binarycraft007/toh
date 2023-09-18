@@ -3,6 +3,7 @@ package socks5
 import (
 	"context"
 	"fmt"
+	"io"
 	"net"
 	"net/netip"
 
@@ -75,13 +76,30 @@ func (s *Socks5Server) Run() error {
 		if err != nil {
 			return err
 		}
-		go func() {
+		go func() error {
 			ctx := context.WithValue(context.Background(),
 				spec.AppAddr, conn.RemoteAddr().String())
 			netConn := s.handshake(ctx, conn)
 			if netConn != nil {
-				s.pipeEngine.Pipe(conn, netConn)
+				errc := make(chan error, 2)
+				go func() {
+					_, err := io.Copy(netConn, conn)
+					if err != nil {
+						err = fmt.Errorf("Error copying to remote: %v", err)
+					}
+					errc <- err
+				}()
+				go func() {
+					_, err := io.Copy(conn, netConn)
+					if err != nil {
+						err = fmt.Errorf("Error copying to client: %v", err)
+					}
+					errc <- err
+				}()
+
+				return <-errc
 			}
+			return nil
 		}()
 	}
 }

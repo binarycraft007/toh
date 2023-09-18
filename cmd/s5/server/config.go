@@ -21,7 +21,7 @@ type Config struct {
 	// advertised server addr
 	Advertise *Advertise `json:"advertise,omitempty"`
 	// toh server list
-	Server *TohServer `json:"servers"`
+	Server *TohServer `json:"server"`
 	// local network settings
 	LocalNet *LocalNet `json:"localnet,omitempty"`
 }
@@ -35,10 +35,10 @@ type Advertise struct {
 }
 
 type TohServer struct {
-	// toh server adderss. i.e. https://fill-in-your-server-here.toh.sh/ws
-	Addr string `json:"addr"`
 	// toh server authcate key
-	Key string `json:"key"`
+	Password   string `json:"password"`
+	RemoteAddr string `json:"remote_addr"`
+	RemotePort int    `json:"remote_port"`
 	// server name indication
 	ServerName string `json:"server_name,omitempty"`
 	// url that responds to any http status code. dual stack IP should be supported
