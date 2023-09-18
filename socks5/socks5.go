@@ -68,7 +68,7 @@ func (s *Socks5Server) Run() error {
 
 	logrus.Infof("listen on %s for socks5+http now", s.opts.Listen)
 
-	go s.pipeEngine.RunTrafficEventConsumeLoop()
+	//go s.pipeEngine.RunTrafficEventConsumeLoop()
 	go s.startUDPListenLoop(udpL)
 
 	for {
@@ -80,7 +80,10 @@ func (s *Socks5Server) Run() error {
 			ctx := context.WithValue(context.Background(),
 				spec.AppAddr, conn.RemoteAddr().String())
 			netConn := s.handshake(ctx, conn)
-			defer conn.Close()
+			defer func() {
+				conn.Close()
+				logrus.Infof("close connection: %v", conn)
+			}()
 			if netConn != nil {
 				errc := make(chan error, 2)
 				go func() {

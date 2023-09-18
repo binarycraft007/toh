@@ -63,13 +63,13 @@ func (s *Socks5Server) pipeSocks5UDP(buf []byte, bc int, udpConn net.PacketConn,
 		return
 	}
 
-	s.pipeEngine.PubEvent(&spec.TrafficEvent{
-		Network:   "udp",
-		LocalAddr: clientAddr.String(),
-		//RemoteAddr: addr,
-		In:  int64(len(payload)),
-		Out: int64(n),
-	})
+	//s.pipeEngine.PubEvent(&spec.TrafficEvent{
+	//	Network:   "udp",
+	//	LocalAddr: clientAddr.String(),
+	//	//RemoteAddr: addr,
+	//	In:  int64(len(payload)),
+	//	Out: int64(n),
+	//})
 }
 
 func decodeSocks5Packet(packet []byte) (ip net.IP, port uint16, payload []byte, err error) {
