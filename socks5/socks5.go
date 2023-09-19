@@ -68,7 +68,6 @@ func (s *Socks5Server) Run() error {
 
 	logrus.Infof("listen on %s for socks5+http now", s.opts.Listen)
 
-	//go s.pipeEngine.RunTrafficEventConsumeLoop()
 	go s.startUDPListenLoop(udpL)
 
 	for {

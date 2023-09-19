@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"math/rand"
 	"net"
 	"net/http"
 	"time"
@@ -10,7 +9,6 @@ import (
 	"github.com/binarycraft007/toh/client"
 	D "github.com/binarycraft007/toh/dns"
 	"github.com/binarycraft007/toh/socks5"
-	"github.com/miekg/dns"
 	"github.com/oschwald/geoip2-golang"
 )
 
@@ -123,13 +121,6 @@ func NewS5Server(opts Options) (s5Server *S5Server, err error) {
 		s5Server.socks5Opts.Listen = opts.Listen
 	}
 
-	s5Server.dns = D.NewLocalDNS(D.Options{
-		Listen:   opts.DNSListen,
-		Upstream: opts.DNSUpstream,
-		Evict:    opts.DNSEvict,
-		Exchange: s5Server.dnsExchange,
-	})
-
 	if err = s5Server.loadServer(); err != nil {
 		return
 	}
@@ -143,8 +134,6 @@ func (s *S5Server) Run() error {
 		return err
 	}
 
-	go s.dns.Run()
-	go s.localAddrFamilyDetection()
 	return ss.Run()
 }
 
@@ -172,28 +161,7 @@ func (s *S5Server) loadServer() (err error) {
 		client:      c,
 		latency:     5 * time.Minute,
 		latencyIPv6: 5 * time.Minute,
-		httpClient: &http.Client{
-			Timeout:   5 * time.Minute,
-			Transport: &http.Transport{DialContext: c.DialContext},
-		},
-		httpIPv4: &http.Client{
-			Timeout: 6 * time.Second,
-			Transport: &http.Transport{
-				DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
-					return c.DialContext(ctx, "tcp4", addr)
-				},
-			},
-		},
-		httpIPv6: &http.Client{
-			Timeout: 6 * time.Second,
-			Transport: &http.Transport{
-				DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
-					return c.DialContext(ctx, "tcp6", addr)
-				},
-			},
-		},
 	}
-	//go s.server.healthcheck(srv.Healthcheck)
 	return
 }
 
@@ -211,92 +179,4 @@ func (s *S5Server) dialTCP(ctx context.Context, addr string) (
 func (s *S5Server) dialUDP(ctx context.Context, addr string) (
 	conn net.Conn, err error) {
 	return s.dial(ctx, addr, "udp")
-}
-
-func (s *S5Server) dnsExchange(dnServer string, clientAddr string, r *dns.Msg) (
-	resp *dns.Msg, err error) {
-	if r.Question[0].Qtype == dns.TypeAAAA {
-		if !s.server.ipv6Enabled() {
-			resp = &dns.Msg{}
-			resp.Question = r.Question
-			resp.SetReply(&dns.Msg{})
-			return
-		}
-	}
-	if r.Question[0].Qtype == dns.TypeA {
-		if !s.server.ipv4Enabled() {
-			resp = &dns.Msg{}
-			resp.Question = r.Question
-			resp.SetReply(&dns.Msg{})
-			return
-		}
-	}
-	resp, err = s.server.client.DNSExchange(dnServer, r)
-	if err != nil {
-		return
-	}
-	return
-}
-
-func (s *S5Server) localAddrFamilyDetection() {
-	if s.opts.Cfg.LocalNet == nil {
-		return
-	}
-	if len(s.opts.Cfg.LocalNet.AddrFamilyDetectURL) == 0 {
-		return
-	}
-
-	httpIPv4 := newHTTPClient(D.LookupIP4)
-	httpIPv6 := newHTTPClient(D.LookupIP6)
-
-	for {
-		var err error
-		for _, url := range s.opts.Cfg.LocalNet.AddrFamilyDetectURL {
-			_, err = httpIPv4.Get(url)
-			if err == nil {
-				s.localNetIPv4 = true
-				break
-			}
-		}
-		if err != nil {
-			s.localNetIPv4 = false
-		}
-
-		for _, url := range s.opts.Cfg.LocalNet.AddrFamilyDetectURL {
-			_, err = httpIPv6.Get(url)
-			if err == nil {
-				s.localNetIPv6 = true
-				break
-			}
-		}
-		if err != nil {
-			s.localNetIPv6 = false
-		}
-
-		time.Sleep(30 * time.Second)
-	}
-}
-
-func newHTTPClient(lookupIP func(host string) (ips []net.IP, err error)) *http.Client {
-	dialer := net.Dialer{}
-	return &http.Client{
-		Timeout: 6 * time.Second,
-		Transport: &http.Transport{
-			DialContext: func(
-				ctx context.Context,
-				network, addr string,
-			) (c net.Conn, err error) {
-				host, port, err := net.SplitHostPort(addr)
-				if err != nil {
-					return
-				}
-				ips, err := lookupIP(host)
-				if err != nil {
-					return
-				}
-				return dialer.DialContext(ctx, network,
-					net.JoinHostPort(ips[rand.Intn(len(ips))].String(), port))
-			},
-		},
-	}
 }

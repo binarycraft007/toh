@@ -6,23 +6,14 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
-	"io"
-	"math/rand"
 	"net"
 	"net/http"
-	"net/url"
 	"strconv"
-	"strings"
-	"sync"
 	"time"
 
 	grpc_net_conn "github.com/binarycraft007/go-grpc-net-conn"
-	D "github.com/binarycraft007/toh/dns"
 	"github.com/binarycraft007/toh/spec"
 	pb "github.com/binarycraft007/toh/spec/api/v1"
-	"github.com/gobwas/ws"
-	"github.com/gobwas/ws/wsutil"
-	"github.com/miekg/dns"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -33,14 +24,8 @@ import (
 type TohClient struct {
 	options         Options
 	connIdleTimeout time.Duration
-	netDial         func(ctx context.Context, network, addr string) (conn net.Conn, err error)
-	httpClient      *http.Client
-	serverIPv4s     []net.IP
-	serverIPv6s     []net.IP
 	serverPort      string
 	RemoteConn      *grpc.ClientConn
-	dnsClient       *dns.Client
-	resolver        *D.Resolver
 }
 
 type Options struct {
@@ -55,66 +40,7 @@ type Options struct {
 func NewTohClient(options Options) (*TohClient, error) {
 	c := &TohClient{
 		options:         options,
-		dnsClient:       &dns.Client{},
 		connIdleTimeout: 75 * time.Second,
-	}
-	dialer := net.Dialer{}
-	c.resolver = &D.Resolver{
-		IPv4Servers: D.DefaultResolver.IPv4Servers,
-		IPv6Servers: D.DefaultResolver.IPv6Servers,
-		Exchange:    c.dnsExchange}
-	c.netDial = func(ctx context.Context, network, addr string) (conn net.Conn, err error) {
-		if len(c.serverIPv6s) == 0 && len(c.serverIPv4s) == 0 {
-			var host string
-			host, c.serverPort, err = net.SplitHostPort(addr)
-			if err != nil {
-				return
-			}
-			done := make(chan bool, 2)
-
-			go func() {
-				defer func() { done <- true }()
-				c.serverIPv6s, err = D.LookupIP6(host)
-				if err != nil {
-					logrus.Debugf("lookup6 for %s: %s", host, err)
-					return
-				}
-			}()
-
-			go func() {
-				defer func() { done <- true }()
-				c.serverIPv4s, err = D.LookupIP4(host)
-				if err != nil {
-					logrus.Debugf("lookup4 for %s: %s", host, err)
-					return
-				}
-			}()
-
-			for i := 0; i < 2; i++ {
-				select {
-				case <-done:
-				}
-			}
-		}
-		if len(c.serverIPv6s) > 0 {
-			address := net.JoinHostPort(c.serverIPv6s[rand.Intn(len(c.serverIPv6s))].String(), c.serverPort)
-			conn, err = dialer.DialContext(ctx, network, address)
-			if err == nil {
-				return
-			}
-		}
-		if len(c.serverIPv4s) > 0 {
-			address := net.JoinHostPort(c.serverIPv4s[rand.Intn(len(c.serverIPv4s))].String(), c.serverPort)
-			conn, err = dialer.DialContext(ctx, network, address)
-			return
-		}
-		err = spec.ErrDNSRecordNotFound
-		return
-	}
-	c.httpClient = &http.Client{
-		Transport: &http.Transport{
-			DialContext: c.netDial,
-		},
 	}
 	var err error
 	port := strconv.Itoa(options.RemotePort)
@@ -123,45 +49,6 @@ func NewTohClient(options Options) (*TohClient, error) {
 		return nil, err
 	}
 	return c, nil
-}
-
-func (c *TohClient) DNSExchange(dnServer string, query *dns.Msg) (resp *dns.Msg, err error) {
-	return c.dnsExchange(dnServer, query)
-}
-
-// LookupIP lookup ipv4 and ipv6
-func (c *TohClient) LookupIP(host string) (ips []net.IP, err error) {
-	var wg sync.WaitGroup
-	wg.Add(1)
-	var e4, e6 error
-	var ip6 []net.IP
-	go func() {
-		defer wg.Done()
-		_ips, e6 := c.LookupIP6(host)
-		if e6 == nil {
-			ip6 = append(ip6, _ips...)
-		}
-	}()
-	_ips, e4 := c.LookupIP4(host)
-	if e4 == nil {
-		ips = append(ips, _ips...)
-	}
-	wg.Wait()
-	ips = append(ips, ip6...)
-	if e4 != nil && e6 != nil {
-		err = fmt.Errorf("%s %s", e4.Error(), e6.Error())
-	}
-	return
-}
-
-// LookupIP4 lookup only ipv4
-func (c *TohClient) LookupIP4(host string) (ips []net.IP, err error) {
-	return c.resolver.LookupIP(host, dns.TypeA)
-}
-
-// LookupIP4 lookup only ipv6
-func (c *TohClient) LookupIP6(host string) (ips []net.IP, err error) {
-	return c.resolver.LookupIP(host, dns.TypeAAAA)
 }
 
 func (c *TohClient) DialTCP(ctx context.Context, addr string) (net.Conn, error) {
@@ -191,19 +78,6 @@ func (c *TohClient) DialContext(ctx context.Context, network, address string) (n
 	}
 }
 
-func (c *TohClient) dnsExchange(dnServer string, query *dns.Msg) (resp *dns.Msg, err error) {
-	dnsLookupCtx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
-	defer cancel()
-	conn, _err := c.DialUDP(dnsLookupCtx, dnServer)
-	if _err != nil {
-		err = fmt.Errorf("dial error: %s", _err.Error())
-		return
-	}
-	defer conn.Close()
-	resp, _, err = c.dnsClient.ExchangeWithConn(query, &dns.Conn{Conn: &spec.PacketConnWrapper{Conn: conn}})
-	return
-}
-
 func (c *TohClient) DialGrpc(name, address string) (*grpc.ClientConn, error) {
 	var transportCredentials credentials.TransportCredentials
 	systemCertPool, err := x509.SystemCertPool()
@@ -220,10 +94,6 @@ func (c *TohClient) DialGrpc(name, address string) (*grpc.ClientConn, error) {
 		grpc.WithTransportCredentials(transportCredentials),
 		grpc.WithAuthority(name),
 	)
-	//return grpc.Dial(
-	//	address,
-	//	grpc.WithTransportCredentials(insecure.NewCredentials()),
-	//)
 }
 
 func (c *TohClient) dial(ctx context.Context, network, addr string) (
@@ -252,18 +122,6 @@ func (c *TohClient) dial(ctx context.Context, network, addr string) (
 		Decode:   grpc_net_conn.SimpleDecoder(FieldFunc),
 	}
 
-	//var ok bool
-	//var estAddrs []string
-	//// Read the header when the header arrives.
-	//header, err := stream.Header()
-	//if err != nil {
-	//	return
-	//}
-	//if estAddrs, ok = header[spec.HeaderEstablishAddr]; !ok {
-	//	err = errors.New("failed to extablish remote conn")
-	//	return
-	//}
-	//estAddr := estAddrs[0]
 	var message *pb.Message
 	if message, err = stream.Recv(); err != nil {
 		err = fmt.Errorf("failed to extablish remote conn: %v", err)
@@ -291,114 +149,4 @@ func (c *TohClient) dial(ctx context.Context, network, addr string) (
 		err = spec.ErrUnsupportNetwork
 	}
 	return
-}
-
-func (c *TohClient) newPingLoop(wsConn *wsConn) {
-	if c.options.Keepalive == 0 {
-		return
-	}
-	for {
-		time.Sleep(c.options.Keepalive)
-		if time.Since(wsConn.lastActiveTime) > c.connIdleTimeout {
-			logrus.Debug("ping: exited. connection reached the max idle time ", c.connIdleTimeout)
-			break
-		}
-		err := wsConn.Ping()
-		if err != nil {
-			logrus.Debug("ping: ", err)
-			break
-		}
-	}
-}
-
-func (c *TohClient) dialWS(ctx context.Context, urlstr string, header http.Header) (
-	wsc *wsConn, respHeader http.Header, err error) {
-	respHeader = http.Header{}
-	var statusCode int
-	var serverName string
-	u, err := url.Parse(urlstr)
-	if err != nil {
-		return
-	}
-	if len(c.options.ServerName) > 0 {
-		serverName = c.options.ServerName
-	} else {
-		var host string
-		host, _, err = net.SplitHostPort(u.Host)
-		if err != nil {
-			if !strings.Contains(err.Error(), "missing port in address") {
-				return
-			} else {
-				host = u.Host
-			}
-		}
-		serverName = host
-	}
-	dialer := ws.Dialer{
-		NetDial: c.netDial,
-		Header:  ws.HandshakeHeaderHTTP(header),
-		OnHeader: func(key, value []byte) (err error) {
-			respHeader.Add(string(key), string(value))
-			return
-		},
-		OnStatusError: func(status int, reason []byte, resp io.Reader) {
-			statusCode = status
-		},
-		TLSConfig: &tls.Config{
-			ServerName: serverName,
-		},
-	}
-	switch u.Scheme {
-	case "http":
-		u.Scheme = "ws"
-	case "https":
-		u.Scheme = "wss"
-	}
-	conn, _, _, err := dialer.Dial(context.Background(), u.String())
-	if statusCode == http.StatusUnauthorized {
-		err = spec.ErrAuth
-		return
-	}
-	if err != nil {
-		err = fmt.Errorf("dial %s: %s", u, err)
-		return
-	}
-	wsc = &wsConn{
-		conn:           conn,
-		lastActiveTime: time.Now(),
-	}
-	return
-}
-
-type wsConn struct {
-	conn           net.Conn
-	lastActiveTime time.Time
-}
-
-func (c *wsConn) Read(ctx context.Context) (b []byte, err error) {
-	c.lastActiveTime = time.Now()
-	if dl, ok := ctx.Deadline(); ok {
-		c.conn.SetReadDeadline(dl)
-	}
-	return wsutil.ReadServerBinary(c.conn)
-}
-func (c *wsConn) Write(ctx context.Context, p []byte) error {
-	c.lastActiveTime = time.Now()
-	if dl, ok := ctx.Deadline(); ok {
-		c.conn.SetWriteDeadline(dl)
-	}
-	return wsutil.WriteClientBinary(c.conn, p)
-}
-
-func (c *wsConn) LocalAddr() net.Addr {
-	return c.conn.LocalAddr()
-}
-
-func (c *wsConn) Close(code int, reason string) error {
-	ws.WriteFrame(c.conn, ws.NewCloseFrame(ws.NewCloseFrameBody(ws.StatusCode(code), reason)))
-	return c.conn.Close()
-}
-
-func (c *wsConn) Ping() error {
-	return wsutil.WriteClientMessage(c.conn, ws.OpPing, ws.NewPingFrame([]byte{}).Payload)
 }
